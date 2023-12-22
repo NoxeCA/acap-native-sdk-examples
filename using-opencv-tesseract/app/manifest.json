@@ -1,0 +1,18 @@
+{
+    "schemaVersion": "1.4.0",
+    "acapPackageConf": {
+        "setup": {
+            "friendlyName": "opencv_tesseract_example",
+            "appName": "opencv_tesseract_app",
+            "vendor": "??",
+            "embeddedSdkVersion": "3.0",
+            "user": {
+                "group": "sdk",
+                "username": "sdk"
+            },
+            "vendorUrl": "https://www.axis.com",
+            "runMode": "never",
+            "version": "1.0.0"
+        }
+    }
+}
