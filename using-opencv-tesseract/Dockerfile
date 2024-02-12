@@ -316,6 +316,8 @@ RUN mkdir ./pkgconfig
 RUN cp -r ${SDK_LIB_PATH_BASE}/lib/pkgconfig/lept_Release.pc ${SDK_LIB_PATH_BASE}/lib/pkgconfig/lept.pc
 RUN cp -r ${SDK_LIB_PATH_BASE}/lib/pkgconfig/* ./pkgconfig
 RUN #ls -lha ./pkgconfig
+RUN #find / -name *libleptonica.so*
+RUN cp -r ${SDK_LIB_PATH_BASE}/lib/libleptonica.so* ./lib
 
 #-------------------------------------------------------------------------------
 # Build Tesseract libraries
