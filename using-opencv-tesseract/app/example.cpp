@@ -23,6 +23,9 @@
 
 #include "imgprovider.h"
 
+#include <iostream>
+#include <fstream>
+using namespace std;
 using namespace cv;
 
 int main(int argc, char* argv[]) {
@@ -72,7 +75,23 @@ int main(int argc, char* argv[]) {
     Mat gray_mat  = Mat(height, width, CV_8UC1);
     Mat nv12_mat = Mat(height * 3 / 2, width, CV_8UC1);
     Mat fg;
+    FILE* file;
 
+    // opening the file in reading mode
+    file = fopen("/opt/app/eng.traineddata", "r");
+
+    // checking if the file opening was successful, if the file would have existed it will return a FILE stream pointer, and if it does not exists it will return NULL, so here we are checking if the file pointer is not null, if so, then
+    if (file!=NULL)
+    {
+        // printing the success message
+        cout << "File exists" << endl;
+    }
+    else
+    {
+        // printing the error message
+        cout << "File does not exists /opt/app/eng.traineddata" << endl;
+        exit(1);
+    }
     while (true) {
         // Get the latest NV12 image frame from VDO using the imageprovider
         VdoBuffer* buf = getLastFrameBlocking(provider);
@@ -122,8 +141,8 @@ int main(int argc, char* argv[]) {
         cvtColor(nv12_mat, gray_mat, COLOR_YUV2GRAY_NV12, 1);
         // https://medium.com/building-a-simple-text-correction-tool/basic-ocr-with-tesseract-and-opencv-34fae6ab3400
         tesseract::TessBaseAPI *ocr = new tesseract::TessBaseAPI();
-        ocr->Init(NULL, "eng", tesseract::OEM_LSTM_ONLY);
-        ocr->SetPageSegMode(tesseract::PSM_AUTO);
+        ocr->Init("/opt/app/eng.traineddata", "eng", tesseract::OEM_LSTM_ONLY);
+        ocr->SetPageSegMode(tesseract::PSM_SINGLE_BLOCK);
         ocr->SetImage(gray_mat.data, gray_mat.size().width, gray_mat.size().width, gray_mat.channels(), gray_mat.step1());
         ocr->Recognize(0);
         char* outText = ocr->GetUTF8Text();
