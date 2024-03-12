@@ -404,10 +404,13 @@ RUN if [ "$ARCH" = armv7hf ]; then \
 
 WORKDIR /opt/app
 COPY ./app .
+COPY ./eng.traineddata .
 RUN cp -P ${TESSERACT_BUILD_DIR}/lib*.so* ./lib/
 RUN cp -P ${TESSERACT_BUILD_DIR}/tesseract.pc.in ./lib/
 RUN cp -P ${TESSERACT_BUILD_DIR}/tesseract_Release.pc ./lib/
 RUN cp -r ${TESSERACT_BUILD_DIR}/include/* ./include/
+ENV TESSDATA_PREFIX=/opt/app
+
 
 #-------------------------------------------------------------------------------
 # Finally build the ACAP application
