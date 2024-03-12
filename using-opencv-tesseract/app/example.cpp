@@ -142,7 +142,7 @@ int main(int argc, char* argv[]) {
         cvtColor(nv12_mat, gray_mat, COLOR_YUV2GRAY_NV12, 1);
         // https://medium.com/building-a-simple-text-correction-tool/basic-ocr-with-tesseract-and-opencv-34fae6ab3400
         tesseract::TessBaseAPI *ocr = new tesseract::TessBaseAPI();
-        ocr->Init("/usr/local/packages/opencv_tesseract_app/eng.traineddata", "eng", tesseract::OEM_LSTM_ONLY);
+        ocr->Init("/usr/local/packages/opencv_tesseract_app", "eng", tesseract::OEM_LSTM_ONLY);
         ocr->SetPageSegMode(tesseract::PSM_SINGLE_BLOCK);
         ocr->SetImage(gray_mat.data, gray_mat.size().width, gray_mat.size().width, gray_mat.channels(), gray_mat.step1());
         ocr->Recognize(0);
