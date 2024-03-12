@@ -417,4 +417,4 @@ ENV TESSDATA_PREFIX=/opt/app
 #-------------------------------------------------------------------------------
 WORKDIR /opt/app
 COPY ./app .
-RUN . /opt/axis/acapsdk/environment-setup* && acap-build .
+RUN . /opt/axis/acapsdk/environment-setup* && acap-build . -a 'eng.traineddata'

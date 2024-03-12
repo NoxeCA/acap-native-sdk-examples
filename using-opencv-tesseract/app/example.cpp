@@ -77,8 +77,9 @@ int main(int argc, char* argv[]) {
     Mat fg;
     FILE* file;
 
-    // opening the file in reading mode
-    file = fopen("/opt/app/eng.traineddata", "r");
+//     // opening the file in reading mode
+     file = fopen("/usr/local/packages/opencv_tesseract_app/eng.traineddata", "r");
+//     file = fopen("/opt/app/eng.traineddata", "r");
 
     // checking if the file opening was successful, if the file would have existed it will return a FILE stream pointer, and if it does not exists it will return NULL, so here we are checking if the file pointer is not null, if so, then
     if (file!=NULL)
