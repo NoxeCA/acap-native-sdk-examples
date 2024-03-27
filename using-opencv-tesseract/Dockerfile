@@ -112,7 +112,7 @@ RUN mkdir lib && \
 #-------------------------------------------------------------------------------
 
 WORKDIR /opt/build
-RUN git clone --branch 3.0.1 https://github.com/libjpeg-turbo/libjpeg-turbo.git
+RUN git clone --branch 3.0.2 https://github.com/libjpeg-turbo/libjpeg-turbo.git
 
 WORKDIR /opt/build/libjpeg-turbo/build
 RUN if [ "$ARCH" = armv7hf ]; then \
@@ -180,30 +180,73 @@ RUN if [ "$ARCH" = armv7hf ]; then \
         exit 1; \
     fi
 
+RUN DEBIAN_FRONTEND=noninteractive \
+    apt-get update && apt-get install -y -f --no-install-recommends tree wget
+
+#-------------------------------------------------------------------------------
+# Build jpeg libraries
+#-------------------------------------------------------------------------------
+
+# Source https://www.ridgesolutions.ie/index.php/2013/05/15/cross-compiling-libjpeg-for-linux-on-arm/
+ARG JPEG_VERSION=9f
+ARG JPEG_DIR=${BUILD_DIR}/jpeg
+ARG JPEG_SRC_DIR=${JPEG_DIR}/jpeg-${JPEG_VERSION}
+ARG JPEG_BUILD_DIR=${JPEG_DIR}/build
+
+WORKDIR ${JPEG_DIR}
+RUN curl -fsSL http://www.ijg.org/files/jpegsrc.v${JPEG_VERSION}.tar.gz|tar -xz
+
+WORKDIR ${JPEG_SRC_DIR}
+RUN . /opt/axis/acapsdk/environment-setup* && \
+    ./configure --host=${ARCH} --prefix=${SDK_LIB_PATH_BASE} cc=${CC%-gcc*}-gcc
+RUN make -j "$(nproc)" && \
+    make install
+
 #-------------------------------------------------------------------------------
 # Build libtiff libraries
 #-------------------------------------------------------------------------------
 
-#WORKDIR /opt/build
-#RUN git clone --branch v4.6.0 https://gitlab.com/libtiff/libtiff
+WORKDIR /opt/build
+RUN #git clone --branch v4.6.0 https://gitlab.com/libtiff/libtiff
+RUN git clone --branch v4.5.1 https://gitlab.com/libtiff/libtiff
+
+#WORKDIR /opt/build/libtiff
+
+#RUN . /opt/axis/acapsdk/environment-setup* && \
+#    ./autogen.sh && \
+#    ./configure --host=${ARCH} --prefix=${SDK_LIB_PATH_BASE} cc=${CC%-gcc*}-gcc
+#RUN make -j "$(nproc)" && \
+#    make install
 #
-#WORKDIR /opt/build/libtiff/build
-#RUN if [ "$ARCH" = armv7hf ]; then \
-#        # Source SDK environment to get cross compilation tools
-#        . /opt/axis/acapsdk/environment-setup* && \
-#        gCFLAGS=' -O2 -mthumb -mfpu=neon -mfloat-abi=hard -mcpu=cortex-a9 -fomit-frame-pointer' \
-#        CC=arm-linux-gnueabihf-gcc cmake -G"Unix Makefiles" .. && \
-#        make -j; \
-#    elif [ "$ARCH" = aarch64 ]; then \
-#        # Source SDK environment to get cross compilation tools
-#        . /opt/axis/acapsdk/environment-setup* && \
-#        CC=/usr/bin/aarch64-linux-gnu-gcc cmake -G"Unix Makefiles" .. && \
-#        make -j; \
-#    else \
-#        printf "Error: '%s' is not a valid value for the ARCH variable\n", "$ARCH"; \
-#        exit 1; \
-#    fi
-#
+#RUN tree .
+
+WORKDIR /opt/build/libtiff/build
+
+RUN #grep -nri J12SAMPARRAY /opt/build/libjpeg-turbo/
+#        -D JPEG_INCLUDE_DIR=/opt/build/libjpeg-turbo && \
+#-D CMAKE_INCLUDE_PATH=/opt/app/include && \
+
+RUN if [ "$ARCH" = armv7hf ]; then \
+        # Source SDK environment to get cross compilation tools
+        . /opt/axis/acapsdk/environment-setup* && \
+        gCFLAGS=' -O2 -mthumb -mfpu=neon -mfloat-abi=hard -mcpu=cortex-a9 -fomit-frame-pointer' \
+        CC=arm-linux-gnueabihf-gcc \
+        cmake -G"Unix Makefiles" .. \
+        -D CMAKE_PREFIX_PATH=$SDK_LIB_PATH_BASE \
+        -D CMAKE_INSTALL_PREFIX=$SDK_LIB_PATH_BASE && \
+        make -j && make install; \
+    elif [ "$ARCH" = aarch64 ]; then \
+        # Source SDK environment to get cross compilation tools
+        . /opt/axis/acapsdk/environment-setup* && \
+        CC=/usr/bin/aarch64-linux-gnu-gcc \
+        cmake -G"Unix Makefiles" .. \
+        -D CMAKE_PREFIX_PATH=$SDK_LIB_PATH_BASE \
+        -D CMAKE_INSTALL_PREFIX=$SDK_LIB_PATH_BASE && \
+        make -j && make install; \
+    else \
+        printf "Error: '%s' is not a valid value for the ARCH variable\n", "$ARCH"; \
+        exit 1; \
+    fi
 
 #-------------------------------------------------------------------------------
 # Copy the built library files to application directory
@@ -221,25 +264,6 @@ RUN if [ "$ARCH" = armv7hf ]; then \
 #
 #WORKDIR /opt/app
 #COPY ./app .
-
-#-------------------------------------------------------------------------------
-# Build jpeg libraries
-#-------------------------------------------------------------------------------
-
-## Source https://www.ridgesolutions.ie/index.php/2013/05/15/cross-compiling-libjpeg-for-linux-on-arm/
-#ARG JPEG_VERSION=9e
-#ARG JPEG_DIR=${BUILD_DIR}/jpeg
-#ARG JPEG_SRC_DIR=${JPEG_DIR}/jpeg-${JPEG_VERSION}
-#ARG JPEG_BUILD_DIR=${JPEG_DIR}/build
-#
-#WORKDIR ${JPEG_DIR}
-#RUN curl -fsSL http://www.ijg.org/files/jpegsrc.v${JPEG_VERSION}.tar.gz|tar -xz
-#
-#WORKDIR ${JPEG_SRC_DIR}
-#RUN . /opt/axis/acapsdk/environment-setup* && \
-#    ./configure --host=${ARCH} --prefix=${SDK_LIB_PATH_BASE} cc=${CC%-gcc*}-gcc
-#RUN make -j "$(nproc)" && make install
-#
 
 #-------------------------------------------------------------------------------
 # Build Leptonica libraries
