@@ -10,7 +10,7 @@ LDLIBS += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs $(PKGS))
 
 CXXFLAGS += -I$(SDKTARGETSYSROOT)/usr/include/opencv4
 LDFLAGS = -L./lib -Wl,--no-as-needed,-rpath,'$$ORIGIN/lib'
-LDLIBS += -lm -lopencv_video -lopencv_imgproc -lopencv_core -lpthread -lleptonica
+LDLIBS += -lm -lopencv_video -lopencv_imgproc -lopencv_core -lpthread -lleptonica -ltiff
 #  -ltesseract  -lstdc++
 
 .PHONY: all clean
