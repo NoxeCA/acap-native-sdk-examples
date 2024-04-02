@@ -152,7 +152,7 @@ COPY ./app .
 #-------------------------------------------------------------------------------
 
 WORKDIR /opt/build
-ARG WEBP_VERSION=1.3.2
+ARG WEBP_VERSION=1.2.2
 RUN curl -fsSL https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-$WEBP_VERSION.tar.gz | tar -xz
 RUN ls /opt/build
 RUN mkdir /opt/build/libwebp-$WEBP_VERSION/build
@@ -180,27 +180,25 @@ RUN if [ "$ARCH" = armv7hf ]; then \
         exit 1; \
     fi
 
-RUN DEBIAN_FRONTEND=noninteractive \
-    apt-get update && apt-get install -y -f --no-install-recommends tree wget
 
-#-------------------------------------------------------------------------------
-# Build jpeg libraries
-#-------------------------------------------------------------------------------
-
-# Source https://www.ridgesolutions.ie/index.php/2013/05/15/cross-compiling-libjpeg-for-linux-on-arm/
-ARG JPEG_VERSION=9f
-ARG JPEG_DIR=${BUILD_DIR}/jpeg
-ARG JPEG_SRC_DIR=${JPEG_DIR}/jpeg-${JPEG_VERSION}
-ARG JPEG_BUILD_DIR=${JPEG_DIR}/build
-
-WORKDIR ${JPEG_DIR}
-RUN curl -fsSL http://www.ijg.org/files/jpegsrc.v${JPEG_VERSION}.tar.gz|tar -xz
-
-WORKDIR ${JPEG_SRC_DIR}
-RUN . /opt/axis/acapsdk/environment-setup* && \
-    ./configure --host=${ARCH} --prefix=${SDK_LIB_PATH_BASE} cc=${CC%-gcc*}-gcc
-RUN make -j "$(nproc)" && \
-    make install
+##-------------------------------------------------------------------------------
+## Build jpeg libraries
+##-------------------------------------------------------------------------------
+#
+## Source https://www.ridgesolutions.ie/index.php/2013/05/15/cross-compiling-libjpeg-for-linux-on-arm/
+#ARG JPEG_VERSION=9f
+#ARG JPEG_DIR=${BUILD_DIR}/jpeg
+#ARG JPEG_SRC_DIR=${JPEG_DIR}/jpeg-${JPEG_VERSION}
+#ARG JPEG_BUILD_DIR=${JPEG_DIR}/build
+#
+#WORKDIR ${JPEG_DIR}
+#RUN curl -fsSL http://www.ijg.org/files/jpegsrc.v${JPEG_VERSION}.tar.gz|tar -xz
+#
+#WORKDIR ${JPEG_SRC_DIR}
+#RUN . /opt/axis/acapsdk/environment-setup* && \
+#    ./configure --host=${ARCH} --prefix=${SDK_LIB_PATH_BASE} cc=${CC%-gcc*}-gcc
+#RUN make -j "$(nproc)" && \
+#    make install
 
 #-------------------------------------------------------------------------------
 # Build libtiff libraries
