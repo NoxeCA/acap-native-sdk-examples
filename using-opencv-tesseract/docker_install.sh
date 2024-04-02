@@ -11,3 +11,5 @@ if [[ -z $password ]]; then
 fi
 
 docker run -it exemple_using_opencv_tesseract_1_0 /opt/axis/acapsdk/sysroots/x86_64-pokysdk-linux/usr/bin/eap-install.sh $host $password install
+docker run -it exemple_using_opencv_tesseract_1_0 /opt/axis/acapsdk/sysroots/x86_64-pokysdk-linux/usr/bin/eap-install.sh $host $password stop
+docker run -it exemple_using_opencv_tesseract_1_0 /opt/axis/acapsdk/sysroots/x86_64-pokysdk-linux/usr/bin/eap-install.sh $host $password start
