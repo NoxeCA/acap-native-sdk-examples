@@ -11,5 +11,10 @@ if [[ -z $password ]]; then
 fi
 
 docker run -it exemple_using_opencv_tesseract_1_0 /opt/axis/acapsdk/sysroots/x86_64-pokysdk-linux/usr/bin/eap-install.sh $host $password install
+
+# Bug replace lib
+# libstdc++.so.6.0.30
+scp lib/libstdc++.so.6 root@${host}:/mnt/flash/usr/local/packages/opencv_tesseract_app/lib/libstdc++.so.6
+
 docker run -it exemple_using_opencv_tesseract_1_0 /opt/axis/acapsdk/sysroots/x86_64-pokysdk-linux/usr/bin/eap-install.sh $host $password stop
 docker run -it exemple_using_opencv_tesseract_1_0 /opt/axis/acapsdk/sysroots/x86_64-pokysdk-linux/usr/bin/eap-install.sh $host $password start
