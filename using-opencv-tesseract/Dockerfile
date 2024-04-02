@@ -250,18 +250,17 @@ RUN if [ "$ARCH" = armv7hf ]; then \
 # Copy the built library files to application directory
 #-------------------------------------------------------------------------------
 
-## Copy the built libraries to application folder
-#ARG BUILD_DIR_TIFF=/opt/build/libtiff
-#WORKDIR /opt/app/lib
-#RUN cp ${BUILD_DIR_TIFF}/build/*.so* .
-#RUN cp ${BUILD_DIR_TIFF}/build/*.so* ${SDK_LIB_PATH_BASE}/lib
-#
-#WORKDIR /opt/app/include
-#RUN cp ${BUILD_DIR_TIFF}/build/*.h . && \
-#    cp ${BUILD_DIR_TIFF}/*.h .
-#
-#WORKDIR /opt/app
-#COPY ./app .
+# Copy the built libraries to application folder
+ARG BUILD_DIR_TIFF=/opt/build/libtiff
+WORKDIR /opt/app/lib
+RUN cp ${BUILD_DIR_TIFF}/build/libtiff/*.so* .
+RUN cp ${BUILD_DIR_TIFF}/build/libtiff/*.so* ${SDK_LIB_PATH_BASE}/lib
+
+WORKDIR /opt/app/include
+RUN cp ${BUILD_DIR_TIFF}/build/libtiff/*.h .
+
+WORKDIR /opt/app
+COPY ./app .
 
 #-------------------------------------------------------------------------------
 # Build Leptonica libraries
