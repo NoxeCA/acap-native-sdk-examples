@@ -269,7 +269,7 @@ COPY ./app .
 ARG LEPTONICA_VERSION=1.79.0
 ARG LEPTONICA_DIR=${BUILD_DIR}/leptonica
 ARG LEPTONICA_SRC_DIR=${LEPTONICA_DIR}/leptonica-${LEPTONICA_VERSION}
-ARG LEPTONICA_BUILD_DIR=${LEPTONICA_DIR}/build/
+#ARG LEPTONICA_BUILD_DIR=${LEPTONICA_DIR}/build/
 
 WORKDIR ${LEPTONICA_DIR}
 RUN curl -fsSL https://github.com/DanBloomberg/leptonica/archive/${LEPTONICA_VERSION}.tar.gz|tar -xz
@@ -331,8 +331,8 @@ RUN if [ "$ARCH" = armv7hf ]; then \
 
 WORKDIR /opt/app
 COPY ./app .
-RUN ls $SDK_LIB_PATH_BASE/lib/pkgconfig -la
-RUN #ls $SDK_LIB_PATH_BASE/lib -la
+#RUN ls $SDK_LIB_PATH_BASE/lib/pkgconfig -la
+#RUN #ls $SDK_LIB_PATH_BASE/lib -la
 RUN mkdir ./pkgconfig
 #RUN cp -r ${SDK_LIB_PATH_BASE}/lib/pkgconfig/lept_Release.pc ${SDK_LIB_PATH_BASE}/lib/pkgconfig/lept.pc
 RUN cp -r ${SDK_LIB_PATH_BASE}/lib/pkgconfig/* ./pkgconfig
@@ -348,7 +348,7 @@ RUN cp -r ${SDK_LIB_PATH_BASE}/include/leptonica/allheaders.h ./include/
 # Build Tesseract libraries
 #-------------------------------------------------------------------------------
 
-ARG TESSERACT_VERSION=4.1.0
+ARG TESSERACT_VERSION=3.05.02
 ARG TESSERACT_DIR=${BUILD_DIR}/tesseract
 ARG TESSERACT_SRC_DIR=${TESSERACT_DIR}/tesseract-${TESSERACT_VERSION}
 ARG TESSERACT_BUILD_DIR=${TESSERACT_DIR}/build
@@ -388,6 +388,7 @@ RUN if [ "$ARCH" = armv7hf ]; then \
         cmake -G"Unix Makefiles" -S ${TESSERACT_SRC_DIR} \
         -D CMAKE_PREFIX_PATH=$SDK_LIB_PATH_BASE \
         -D CMAKE_INSTALL_PREFIX=$SDK_LIB_PATH_BASE \
+        -D Leptonica_DIR=${LEPTONICA_SRC_DIR}/cmake \
         -D CMAKE_BUILD_TYPE=Release \
         -D BUILD_TRAINING_TOOLS=OFF \
         -D SW_BUILD=OFF \
@@ -401,6 +402,7 @@ RUN if [ "$ARCH" = armv7hf ]; then \
         cmake -G"Unix Makefiles" -S ${TESSERACT_SRC_DIR} \
         -D CMAKE_PREFIX_PATH=$SDK_LIB_PATH_BASE \
         -D CMAKE_INSTALL_PREFIX=$SDK_LIB_PATH_BASE \
+        -D Leptonica_DIR=${LEPTONICA_SRC_DIR}/cmake \
         -D CMAKE_BUILD_TYPE=Release \
         -D BUILD_TRAINING_TOOLS=OFF \
         -D SW_BUILD=OFF \
@@ -438,9 +440,13 @@ COPY ./app .
 COPY ./eng.traineddata .
 RUN cp -P ${TESSERACT_BUILD_DIR}/lib*.so* ./lib/
 RUN cp -P ${TESSERACT_BUILD_DIR}/tesseract.pc ./lib/
+RUN sed -i 's/tesseract_OUTPUT_NAME-NOTFOUND/tesseract/g' ./lib/tesseract.pc
+RUN sed -i 's/tesseract_OUTPUT_NAME-NOTFOUND/tesseract/g' ${TESSERACT_BUILD_DIR}/tesseract.pc
+RUN cat ./lib/tesseract.pc
 #RUN cp -P ${TESSERACT_BUILD_DIR}/tesseract.pc.in ./lib/
 #RUN cp -P ${TESSERACT_BUILD_DIR}/tesseract_Release.pc ./lib/
 #RUN tree ${TESSERACT_BUILD_DIR}
+RUN tree ${LEPTONICA_SRC_DIR}/cmake
 #RUN cp -r ${TESSERACT_BUILD_DIR}/include/* ./include/
 ENV TESSDATA_PREFIX=/opt/app
 
