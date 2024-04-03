@@ -266,10 +266,10 @@ COPY ./app .
 # Build Leptonica libraries
 #-------------------------------------------------------------------------------
 
-ARG LEPTONICA_VERSION=1.84.1
+ARG LEPTONICA_VERSION=1.79.0
 ARG LEPTONICA_DIR=${BUILD_DIR}/leptonica
 ARG LEPTONICA_SRC_DIR=${LEPTONICA_DIR}/leptonica-${LEPTONICA_VERSION}
-ARG LEPTONICA_BUILD_DIR=${LEPTONICA_DIR}/build
+ARG LEPTONICA_BUILD_DIR=${LEPTONICA_DIR}/build/
 
 WORKDIR ${LEPTONICA_DIR}
 RUN curl -fsSL https://github.com/DanBloomberg/leptonica/archive/${LEPTONICA_VERSION}.tar.gz|tar -xz
@@ -331,20 +331,24 @@ RUN if [ "$ARCH" = armv7hf ]; then \
 
 WORKDIR /opt/app
 COPY ./app .
-RUN #ls $SDK_LIB_PATH_BASE/lib/pkgconfig -la
+RUN ls $SDK_LIB_PATH_BASE/lib/pkgconfig -la
 RUN #ls $SDK_LIB_PATH_BASE/lib -la
 RUN mkdir ./pkgconfig
-RUN cp -r ${SDK_LIB_PATH_BASE}/lib/pkgconfig/lept_Release.pc ${SDK_LIB_PATH_BASE}/lib/pkgconfig/lept.pc
+#RUN cp -r ${SDK_LIB_PATH_BASE}/lib/pkgconfig/lept_Release.pc ${SDK_LIB_PATH_BASE}/lib/pkgconfig/lept.pc
 RUN cp -r ${SDK_LIB_PATH_BASE}/lib/pkgconfig/* ./pkgconfig
 RUN #ls -lha ./pkgconfig
 RUN #find / -name *libleptonica.so*
-RUN cp -r ${SDK_LIB_PATH_BASE}/lib/libleptonica.so* ./lib
+RUN cp -r ${SDK_LIB_PATH_BASE}/lib/libleptonica.so* ./lib/
+RUN ls ${SDK_LIB_PATH_BASE}/include/leptonica/allheaders.h
+RUN cp -r ${SDK_LIB_PATH_BASE}/include/leptonica ./include/
+RUN cp -r ${SDK_LIB_PATH_BASE}/include/leptonica/*.h ${SDK_LIB_PATH_BASE}/include
+RUN cp -r ${SDK_LIB_PATH_BASE}/include/leptonica/allheaders.h ./include/
 
 #-------------------------------------------------------------------------------
 # Build Tesseract libraries
 #-------------------------------------------------------------------------------
 
-ARG TESSERACT_VERSION=5.3.3
+ARG TESSERACT_VERSION=4.1.0
 ARG TESSERACT_DIR=${BUILD_DIR}/tesseract
 ARG TESSERACT_SRC_DIR=${TESSERACT_DIR}/tesseract-${TESSERACT_VERSION}
 ARG TESSERACT_BUILD_DIR=${TESSERACT_DIR}/build
@@ -423,13 +427,21 @@ RUN if [ "$ARCH" = armv7hf ]; then \
 ## Copy the built library files to application directory
 ##-------------------------------------------------------------------------------
 
+RUN DEBIAN_FRONTEND=noninteractive \
+    apt-get update && apt-get install -y -f --no-install-recommends \
+    tree && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /opt/app
 COPY ./app .
 COPY ./eng.traineddata .
 RUN cp -P ${TESSERACT_BUILD_DIR}/lib*.so* ./lib/
-RUN cp -P ${TESSERACT_BUILD_DIR}/tesseract.pc.in ./lib/
-RUN cp -P ${TESSERACT_BUILD_DIR}/tesseract_Release.pc ./lib/
-RUN cp -r ${TESSERACT_BUILD_DIR}/include/* ./include/
+RUN cp -P ${TESSERACT_BUILD_DIR}/tesseract.pc ./lib/
+#RUN cp -P ${TESSERACT_BUILD_DIR}/tesseract.pc.in ./lib/
+#RUN cp -P ${TESSERACT_BUILD_DIR}/tesseract_Release.pc ./lib/
+#RUN tree ${TESSERACT_BUILD_DIR}
+#RUN cp -r ${TESSERACT_BUILD_DIR}/include/* ./include/
 ENV TESSDATA_PREFIX=/opt/app
 
 
