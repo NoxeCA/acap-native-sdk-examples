@@ -220,7 +220,7 @@ RUN git clone --branch v4.5.1 https://gitlab.com/libtiff/libtiff
 
 WORKDIR /opt/build/libtiff/build
 
-RUN #grep -nri J12SAMPARRAY /opt/build/libjpeg-turbo/
+#RUN grep -nri J12SAMPARRAY /opt/build/libjpeg-turbo/
 #        -D JPEG_INCLUDE_DIR=/opt/build/libjpeg-turbo && \
 #-D CMAKE_INCLUDE_PATH=/opt/app/include && \
 
@@ -263,10 +263,87 @@ WORKDIR /opt/app
 COPY ./app .
 
 #-------------------------------------------------------------------------------
+# Build openjpeg libraries
+#-------------------------------------------------------------------------------
+RUN DEBIAN_FRONTEND=noninteractive \
+    apt-get update && apt-get install -y -f --no-install-recommends \
+    tree && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+## Source https://github.com/uclouvain/openjpeg
+ARG JPEG_VERSION=2.2.0
+ARG JPEG_DIR=${BUILD_DIR}/jpeg
+ARG JPEG_SRC_DIR=${JPEG_DIR}/openjpeg-${JPEG_VERSION}
+ARG JPEG_BUILD_DIR=${JPEG_SRC_DIR}/build
+
+WORKDIR ${JPEG_DIR}
+RUN curl -fsSL https://github.com/uclouvain/openjpeg/archive/refs/tags/v${JPEG_VERSION}.tar.gz|tar -xz
+
+#WORKDIR ${JPEG_SRC_DIR}
+#RUN . /opt/axis/acapsdk/environment-setup* && \
+#    ./configure --host=${ARCH} --prefix=${SDK_LIB_PATH_BASE} cc=${CC%-gcc*}-gcc
+#RUN make -j "$(nproc)" && \
+#    make install
+RUN ls ${JPEG_DIR}
+RUN mkdir ${JPEG_BUILD_DIR}
+
+WORKDIR ${JPEG_BUILD_DIR}
+
+RUN if [ "$ARCH" = armv7hf ]; then \
+        # Source SDK environment to get cross compilation tools
+        . /opt/axis/acapsdk/environment-setup* && \
+        gCFLAGS=' -O2 -mthumb -mfpu=neon -mfloat-abi=hard -mcpu=cortex-a9 -fomit-frame-pointer' \
+        CC=arm-linux-gnueabihf-gcc \
+        cmake -G"Unix Makefiles" .. \
+        -D CMAKE_PREFIX_PATH=$SDK_LIB_PATH_BASE \
+        -D CMAKE_INSTALL_PREFIX=$SDK_LIB_PATH_BASE && \
+        make -j && make install; \
+    elif [ "$ARCH" = aarch64 ]; then \
+        # Source SDK environment to get cross compilation tools
+        . /opt/axis/acapsdk/environment-setup* && \
+        CC=/usr/bin/aarch64-linux-gnu-gcc \
+        cmake -G"Unix Makefiles" .. \
+        -D CMAKE_PREFIX_PATH=$SDK_LIB_PATH_BASE \
+        -D CMAKE_INSTALL_PREFIX=$SDK_LIB_PATH_BASE && \
+        make -j && make install; \
+    else \
+        printf "Error: '%s' is not a valid value for the ARCH variable\n", "$ARCH"; \
+        exit 1; \
+    fi
+
+RUN tree ${JPEG_BUILD_DIR}/
+
+WORKDIR /opt/app/lib
+RUN cp -P ${JPEG_BUILD_DIR}/libopenjp2.pc .
+RUN cp ${JPEG_BUILD_DIR}/bin/*.so* .
+#/opt/build/jpeg/openjpeg-2.2.0/src/lib/
+WORKDIR /opt/app/include
+RUN cp -r ${JPEG_SRC_DIR}/src/lib/* .
+RUN cp -r ${JPEG_SRC_DIR}/src/lib/* ${SDK_LIB_PATH_BASE}/include
+#RUN ln -s openjp2 openjpeg-2.2
+RUN mkdir openjpeg-2.2
+RUN cp openjp2/openjpeg.h openjpeg-2.2/
+RUN ls ${SDK_LIB_PATH_BASE}/include/openjpeg-2.2
+#RUN mkdir ${SDK_LIB_PATH_BASE}/include/openjpeg-2.2
+RUN cp ${SDK_LIB_PATH_BASE}/include/openjp2/openjpeg.h ${SDK_LIB_PATH_BASE}/include/openjpeg-2.2
+RUN cp -r ${SDK_LIB_PATH_BASE}/include/openjpeg-2.2/openjpeg.h /opt/app/include/openjpeg-2.2/
+#RUN find ${JPEG_DIR} -name "*.h"
+
+#RUN tree ${SDK_LIB_PATH_BASE}
+#WORKDIR /opt/app
+#COPY ./app .
+
+#RUN find /opt/app -name "openjpeg.h"|grep openjpeg-2.2
+RUN find ${SDK_LIB_PATH_BASE}/include/openjpeg-2.2 -name "openjpeg.h"|grep openjpeg-2.2
+RUN ls /opt/app/include/openjpeg-2.2 -lha
+RUN find /opt/app/include/openjpeg-2.2 -name "openjpeg.h"|grep openjpeg-2.2
+
+#-------------------------------------------------------------------------------
 # Build Leptonica libraries
 #-------------------------------------------------------------------------------
 
-ARG LEPTONICA_VERSION=1.79.0
+ARG LEPTONICA_VERSION=1.74.0
 ARG LEPTONICA_DIR=${BUILD_DIR}/leptonica
 ARG LEPTONICA_SRC_DIR=${LEPTONICA_DIR}/leptonica-${LEPTONICA_VERSION}
 #ARG LEPTONICA_BUILD_DIR=${LEPTONICA_DIR}/build/
@@ -275,8 +352,8 @@ WORKDIR ${LEPTONICA_DIR}
 RUN curl -fsSL https://github.com/DanBloomberg/leptonica/archive/${LEPTONICA_VERSION}.tar.gz|tar -xz
 
 WORKDIR ${LEPTONICA_SRC_DIR}
-RUN . /opt/axis/acapsdk/environment-setup* && \
-    ./autogen.sh
+#RUN . /opt/axis/acapsdk/environment-setup* && \
+#    ./autogen.sh
 
 #RUN . /opt/axis/acapsdk/environment-setup* && \
 #    ./configure --host=${ARCH}     --disable-programs \
@@ -300,7 +377,7 @@ RUN if [ "$ARCH" = armv7hf ]; then \
         -DBUILD_PROG=OFF \
         -DSW_BUILD=OFF \
         -DBUILD_SHARED_LIBS=ON && \
-        cmake --build build --config Release --target install -j; \
+        cmake --build build --config Release && make -j && make install; \
     elif [ "$ARCH" = aarch64 ]; then \
         # Source SDK environment to get cross compilation tools
         . /opt/axis/acapsdk/environment-setup* && \
@@ -312,7 +389,7 @@ RUN if [ "$ARCH" = armv7hf ]; then \
         -DBUILD_PROG=OFF \
         -DSW_BUILD=OFF \
         -DBUILD_SHARED_LIBS=ON && \
-        cmake --build build --config Release --target install -j; \
+        cmake --build build --config Release && make -j && make install; \
     else \
         printf "Error: '%s' is not a valid value for the ARCH variable\n", "$ARCH"; \
         exit 1; \
@@ -428,12 +505,6 @@ RUN if [ "$ARCH" = armv7hf ]; then \
 ##-------------------------------------------------------------------------------
 ## Copy the built library files to application directory
 ##-------------------------------------------------------------------------------
-
-RUN DEBIAN_FRONTEND=noninteractive \
-    apt-get update && apt-get install -y -f --no-install-recommends \
-    tree && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/app
 COPY ./app .
