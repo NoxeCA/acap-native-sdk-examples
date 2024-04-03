@@ -325,9 +325,12 @@ RUN cp -r ${JPEG_SRC_DIR}/src/lib/* ${SDK_LIB_PATH_BASE}/include
 RUN mkdir openjpeg-2.2
 RUN cp openjp2/openjpeg.h openjpeg-2.2/
 RUN ls ${SDK_LIB_PATH_BASE}/include/openjpeg-2.2
+RUN ls /opt/app/include/openjpeg-2.2
 #RUN mkdir ${SDK_LIB_PATH_BASE}/include/openjpeg-2.2
-RUN cp ${SDK_LIB_PATH_BASE}/include/openjp2/openjpeg.h ${SDK_LIB_PATH_BASE}/include/openjpeg-2.2
-RUN cp -r ${SDK_LIB_PATH_BASE}/include/openjpeg-2.2/openjpeg.h /opt/app/include/openjpeg-2.2/
+# Source https://github.com/DanBloomberg/leptonica/blob/1.74.0/cmake/Configure.cmake
+# Problem Looking for include file openjpeg-2.2/openjpeg.h - not found
+#RUN cp ${SDK_LIB_PATH_BASE}/include/openjp2/openjpeg.h ${SDK_LIB_PATH_BASE}/include/openjpeg-2.2
+#RUN cp -r ${SDK_LIB_PATH_BASE}/include/openjpeg-2.2 /opt/app/include/openjpeg-2.2/
 #RUN find ${JPEG_DIR} -name "*.h"
 
 #RUN tree ${SDK_LIB_PATH_BASE}
@@ -342,7 +345,7 @@ RUN find /opt/app/include/openjpeg-2.2 -name "openjpeg.h"|grep openjpeg-2.2
 #-------------------------------------------------------------------------------
 # Build Leptonica libraries
 #-------------------------------------------------------------------------------
-
+# Choose your version https://tesseract-ocr.github.io/tessdoc/Compiling.html
 ARG LEPTONICA_VERSION=1.74.0
 ARG LEPTONICA_DIR=${BUILD_DIR}/leptonica
 ARG LEPTONICA_SRC_DIR=${LEPTONICA_DIR}/leptonica-${LEPTONICA_VERSION}
